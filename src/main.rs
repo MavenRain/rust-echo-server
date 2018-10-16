@@ -12,7 +12,7 @@ fn echo(request: Request<Body>) -> FutureResponse {
     match (request.method(), request.uri().path()) {
       (& Method::GET, "/") => Response::new(Body::from("Try POSTing data to /echo")),
       (& Method::POST, "/echo") => Response::new(request.into_body()),
-      _ => Response::builder().status(StatusCode::NOT_FOUND).body(Body::from("Path was not found")).unwrap()
+      _ => Response::builder().status(StatusCode::NOT_FOUND).body(Body::from("Path was not found")).unwrap_or(Response::new(Body::from("")))
     }
   ))
 }
