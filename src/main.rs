@@ -1,7 +1,7 @@
 extern crate futures;
 extern crate hyper;
 
-use futures::{future, Future};
+use futures::{future, Future, Stream};
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
 use hyper::service::service_fn;
 
@@ -12,7 +12,12 @@ fn echo(request: Request<Body>) -> FutureResponse {
     match (request.method(), request.uri().path()) {
       (& Method::GET, "/") => Response::new(Body::from("Try POSTing data to /echo")),
       (& Method::POST, "/echo") => Response::new(request.into_body()),
-      _ => Response::builder().status(StatusCode::NOT_FOUND).body(Body::from("Path was not found")).unwrap_or(Response::new(Body::from("")))
+      (& Method::POST, "/echo/uppercase") => Response::new(Body::wrap_stream(
+        request.into_body().map(|chunk| chunk.iter().map(|byte| byte.to_ascii_uppercase())
+          .collect::<Vec<u8>>())
+      )),
+      _ => Response::builder().status(StatusCode::NOT_FOUND).body(Body::from("Path was not found"))
+        .unwrap_or(Response::new(Body::from("")))
     }
   ))
 }
